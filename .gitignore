@@ -1,0 +1,9 @@
+# General
+*.bak
+*.exe
+
+# VS Code
+**/.vscode/*
+
+# Advent of Code
+input.txt
