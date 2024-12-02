@@ -1,6 +1,8 @@
 # General
 *.bak
 *.exe
+*.ilk
+*.pdb
 
 # VS Code
 **/.vscode/*
