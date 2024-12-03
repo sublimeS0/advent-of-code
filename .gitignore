@@ -7,5 +7,8 @@
 # VS Code
 **/.vscode/*
 
+# PyCharm
+**/.idea/*
+
 # Advent of Code
 input.txt
