@@ -1,6 +1,6 @@
 def main():
     """
-    Entry point for Day 4, Part 1
+    Entry point for Day 4, Part 2
 
     :return: Exit code
     """
