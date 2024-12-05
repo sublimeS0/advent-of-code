@@ -39,6 +39,12 @@ def main():
 
 
 def is_correctly_ordered(page, rules):
+    """
+    Check if a page update is correctly ordered, given a set of rules
+    :param page: Page to check
+    :param rules: Rules to validate page against
+    :return: True if the page is correctly ordered, false otherwise
+    """
     for rule in rules:
         rule = [int(val) for val in rule.split('|')]
         if rule[0] in page and rule[1] in page and page.index(rule[0]) > page.index(rule[1]):
