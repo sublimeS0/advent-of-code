@@ -3,7 +3,7 @@ from itertools import product
 
 def main():
     """
-    Entry point for day 7 part 1
+    Entry point for day 7 part 2
     :return: Exit status
     """
     equations = read_input('input.txt')
