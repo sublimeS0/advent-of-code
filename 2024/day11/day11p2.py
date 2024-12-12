@@ -3,7 +3,7 @@ from functools import cache
 
 def main():
     """
-    Entry point for day 11, part 1.
+    Entry point for day 11, part 2.
 
     :return: Exit status
     """
