@@ -1,6 +1,8 @@
 def main():
     """
-    Entry point for day 14, part 1
+    Entry point for day 14, part 2
+
+    No change. Part 2 solved with same script.
     :return: Exit code
     """
     guards = read_input('input.txt')
