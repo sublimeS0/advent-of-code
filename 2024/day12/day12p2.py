@@ -30,7 +30,7 @@ def main():
     Entry point for day 12, part 2
     :return: Exit code
     """
-    garden_plot = read_input('input_small.txt')
+    garden_plot = read_input('input.txt')
 
     graph = construct_graph(garden_plot)
 
@@ -39,7 +39,7 @@ def main():
 
 
 def calculate_score(graph):
-    area_score = 0
+    area_score = 0.0
 
     checked_nodes = []
     for node in graph.graph.items():
@@ -53,36 +53,106 @@ def calculate_score(graph):
 
         area_nodes = graph.DFS(node[0])
 
-        perimeter = 0
         convex_corners = 0
         concave_corners = 0
 
-        #
-        # perimeter = convex corners + (concave corners / 2)
-        #
+        for area_node in area_nodes:
 
-        # Convex corners
-        if len(node[1]) == 0:
-            convex_corners = convex_corners + 4
-        elif len(node[1]) == 1:
-            convex_corners = convex_corners + 2
-        elif len(node[1]) == 2:
-            test = 0
-        elif len(node[1]) == 3:
-            convex_corners = convex_corners + 0
-        elif len(node[1]) == 4:
-            convex_corners = convex_corners + 0
+            edges = graph.graph[area_node]
+
+            # Calculate corners
+
+            has_top = (area_node[0] - 1, area_node[1]) in edges
+            has_right = (area_node[0], area_node[1] + 1) in edges
+            has_bottom = (area_node[0] + 1, area_node[1]) in edges
+            has_left = (area_node[0], area_node[1] - 1) in edges
+
+            has_top_right = (area_node[0] - 1, area_node[1] + 1) in edges
+            has_bottom_right = (area_node[0] + 1, area_node[1] + 1) in edges
+            has_bottom_left = (area_node[0] + 1, area_node[1] - 1) in edges
+            has_top_left = (area_node[0] - 1, area_node[1] - 1) in edges
+
+
+            if has_top_left:
+                if has_top and has_left:
+                    pass
+                elif has_top != has_left:
+                    concave_corners = concave_corners + 1
+                else:
+                    convex_corners = convex_corners + 1
+            else:
+                if has_top and has_left:
+                    concave_corners = concave_corners + 1
+                elif has_top != has_left:
+                    # concave_corners = concave_corners + 1
+                    pass
+                else:
+                    convex_corners = convex_corners + 1
+
+            if has_top_right:
+                if has_top and has_right:
+                    pass
+                elif has_top != has_right:
+                    concave_corners = concave_corners + 1
+                else:
+                    convex_corners = convex_corners + 1
+            else:
+                if has_top and has_right:
+                    concave_corners = concave_corners + 1
+                elif has_top != has_right:
+                    # concave_corners = concave_corners + 1
+                    pass
+                else:
+                    convex_corners = convex_corners + 1
+
+            if has_bottom_right:
+                if has_bottom and has_right:
+                    pass
+                elif has_bottom != has_right:
+                    concave_corners = concave_corners + 1
+                else:
+                    convex_corners = convex_corners + 1
+            else:
+                if has_bottom and has_right:
+                    concave_corners = concave_corners + 1
+                elif has_bottom != has_right:
+                    # concave_corners = concave_corners + 1
+                    pass
+                else:
+                    convex_corners = convex_corners + 1
+
+            if has_bottom_left:
+                if has_bottom and has_left:
+                    pass
+                elif has_bottom != has_left:
+                    concave_corners = concave_corners + 1
+                else:
+                    convex_corners = convex_corners + 1
+            else:
+                if has_bottom and has_left:
+                    concave_corners = concave_corners + 1
+                elif has_bottom != has_left:
+                    # concave_corners = concave_corners + 1
+                    pass
+                else:
+                    convex_corners = convex_corners + 1
 
         area = len(area_nodes)
+        perimeter = convex_corners + (concave_corners / 3)
+        area_score = area_score + area * perimeter
 
         checked_nodes.extend(area_nodes)
-
-        area_score = area_score + area * perimeter
 
     return area_score
 
 
 def construct_graph(garden_plot):
+    """
+    Construct the graph from the input
+
+    :param garden_plot: Input to construct graph from
+    :return: Graph representing the garden plot
+    """
     graph = Graph()
 
     for r in range(len(garden_plot)):
@@ -91,6 +161,7 @@ def construct_graph(garden_plot):
             current_char = garden_plot[r][c]
 
             edge_found = False
+            # Cardinal directions
             if r - 1 >= 0 and garden_plot[r - 1][c] == current_char:
                 graph.add_edge((r, c), (r - 1, c))
                 edge_found = True
@@ -106,6 +177,23 @@ def construct_graph(garden_plot):
             if c + 1 < len(garden_plot[r]) and garden_plot[r][c + 1] == current_char:
                 graph.add_edge((r, c), (r, c + 1))
                 edge_found = True
+
+            # Ordinal directions
+            if (r - 1 >= 0 and c - 1 >= 0 and garden_plot[r - 1][c - 1] == current_char and
+                    (garden_plot[r - 1][c] == current_char or garden_plot[r][c - 1] == current_char)):
+                graph.add_edge((r,c), (r - 1, c - 1))
+
+            if (r - 1 >= 0 and c + 1 < len(garden_plot[r]) and garden_plot[r - 1][c + 1] == current_char and
+                    (garden_plot[r - 1][c] == current_char or garden_plot[r][c + 1] == current_char)):
+                graph.add_edge((r, c), (r - 1, c + 1))
+
+            if  (r + 1 < len(garden_plot) and c - 1 >= 0 and garden_plot[r + 1][c - 1] == current_char and
+                    (garden_plot[r + 1][c] == current_char or garden_plot[r][c - 1] == current_char)):
+                graph.add_edge((r, c), (r + 1, c - 1))
+
+            if (r + 1 < len(garden_plot) and c + 1 < len(garden_plot[r]) and garden_plot[r + 1][c + 1] == current_char and
+                    (garden_plot[r + 1][c] == current_char or garden_plot[r][c + 1] == current_char)):
+                graph.add_edge((r, c), (r + 1, c + 1))
 
             if not edge_found:
                 # Item has no edges
