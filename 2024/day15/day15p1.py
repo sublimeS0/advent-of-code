@@ -1,4 +1,8 @@
 def main():
+    """
+    Entry point for day 15, part 1
+    :return: Exit code
+    """
     floor_map, instructions, pos = read_input('input.txt')
 
     # print_map(floor_map)
@@ -58,6 +62,13 @@ def move_robot(pos, inst, floor_map):
 
 
 def shift_boxes(pos, inst, floor_map):
+    """
+    Recursively move boxes if robot is pushing them
+    :param pos: Position of box to move
+    :param inst: Instruction (direction to move the box)
+    :param floor_map: Current floor map layout
+    :return: Updated floor map (dictionary)
+    """
     # Get target position
     if inst == '^':
         new_pos = (pos[0] - 1, pos[1])
