@@ -1,15 +1,24 @@
 def main():
-    floor_map, instructions, pos = read_input('input.txt')
+    """
+    Entry point for day 15, part 2
 
-    # print_map(floor_map)
+    :return: Exit code
+    """
+
+    floor_map, instructions, pos = read_input('input_test.txt')
+
+    print_map(floor_map)
 
     # Parse instructions to move robot
     for inst in instructions:
+        convert_map_to_array(floor_map)
         pos, floor_map = move_robot(pos, inst, floor_map)
-        # print(inst)
-        # print_map(floor_map)
+        print(inst)
+        print_map(floor_map)
+        print()
 
     # Calculate box GPS sum
+    # TODO: Rework scoring mechanism
     gps_score = 0
     for key, value in floor_map.items():
         if value == 'O':
@@ -34,30 +43,39 @@ def move_robot(pos, inst, floor_map):
         new_pos = (pos[0], pos[1] + 1)
     elif inst == 'v':
         new_pos = (pos[0] + 1, pos[1])
-    else:  # inst == '^'
+    else:  # inst == '<'
         new_pos = (pos[0], pos[1] - 1)
 
-    # Check if the position is valid
-    if new_pos in floor_map:
+    # Check if new position is valid
+    if new_pos not in floor_map:
+        return pos, floor_map
+
+    char = floor_map[new_pos]
+
+    if char in ['[', ']']:
+        # Box, try to push the boxes
+        floor_map = shift_boxes(new_pos, inst, floor_map)
         char = floor_map[new_pos]
 
-        if char == 'O':
-            # Box, try to push the boxes
-            floor_map = shift_boxes(new_pos, inst, floor_map)
-            char = floor_map[new_pos]
+    if char == '.':
+        # Open space, just move the robot
+        floor_map[pos] = '.'
+        floor_map[new_pos] = '@'
 
-        if char == '.':
-            # Open space, just move the robot
-            floor_map[pos] = '.'
-            floor_map[new_pos] = '@'
-
-            return new_pos, floor_map
+        return new_pos, floor_map
 
     # Wall (or out of the map), ignore instruction and do nothing
     return pos, floor_map
 
 
 def shift_boxes(pos, inst, floor_map):
+    """
+    Recursively move boxes if robot is pushing them
+    :param pos: Position of box to move
+    :param inst: Instruction (direction to move the box)
+    :param floor_map: Current floor map layout
+    :return: Updated floor map (dictionary)
+    """
     # Get target position
     if inst == '^':
         new_pos = (pos[0] - 1, pos[1])
@@ -65,7 +83,7 @@ def shift_boxes(pos, inst, floor_map):
         new_pos = (pos[0], pos[1] + 1)
     elif inst == 'v':
         new_pos = (pos[0] + 1, pos[1])
-    else:  # inst == '^'
+    else:  # inst == '<'
         new_pos = (pos[0], pos[1] - 1)
 
     # Check if position is valid
@@ -75,15 +93,86 @@ def shift_boxes(pos, inst, floor_map):
     if floor_map[new_pos] == '#':
         return floor_map
 
-    if floor_map[new_pos] == 'O':
+    # Running into a box, see if we can shift
+    if floor_map[new_pos] in ['[', ']']:
+
         floor_map = shift_boxes(new_pos, inst, floor_map)
 
-    if floor_map[new_pos] == '.':
-        floor_map[new_pos] = 'O'
-        floor_map[pos] = '.'
-        return floor_map
+    # Left to right moves are trivial
+    if inst in ['<', '>']:
+        if floor_map[pos] == '[' and floor_map[new_pos] == '.':
+            floor_map[new_pos] = '['
+            floor_map[pos] = '.'
+
+        if floor_map[pos] == ']' and floor_map[new_pos] == '.':
+            floor_map[new_pos] = ']'
+            floor_map[pos] = '.'
+
+    # Up and down moves require more effort
+    if inst in ['^', 'v']:
+
+        if floor_map[new_pos] == '[':
+
+            if floor_map[(new_pos[0], new_pos[1] + 1)]:
+                floor_map = shift_boxes((new_pos[0], new_pos[1] + 1), inst, floor_map)
+
+        elif floor_map[new_pos] == ']':
+
+            if floor_map[(new_pos[0], new_pos[1] - 1)]:
+                floor_map = shift_boxes((new_pos[0], new_pos[1] - 1), inst, floor_map)
+
+
+
+        if floor_map[pos] == '[':
+            if floor_map[new_pos] == '.' and floor_map[(new_pos[0], new_pos[1] + 1)] == '.':
+
+                floor_map[new_pos] = '['
+                floor_map[(new_pos[0], new_pos[1] + 1)] = ']'
+
+                floor_map[pos] = '.'
+                floor_map[(pos[0], pos[1] + 1)] = '.'
+
+        elif floor_map[pos] == ']':
+            if floor_map[new_pos] == '.' and floor_map[(new_pos[0], new_pos[1] - 1)] == '.':
+
+                floor_map[new_pos] = ']'
+                floor_map[(new_pos[0], new_pos[1] - 1)] = '['
+
+                floor_map[pos] = '.'
+                floor_map[(pos[0], pos[1] - 1)] = '.'
 
     return floor_map
+
+def convert_map_to_array(floor_map):
+    """
+    Converts floor map dictionary into an 2D array for visualization purposes
+    :param floor_map: Floor dictionary
+    :return: 2D array dictionary conversion
+    """
+
+    conv_list = []
+    row = []
+    current_row = 0
+    for key, value in floor_map.items():
+
+        if key[0] == current_row:
+            if value == '.':
+                row.append('_')
+            else:
+                row.append(value)
+        else:
+            current_row = current_row + 1
+
+            conv_list.append(row[:])
+            row = []
+
+            if value == '.':
+                row.append('_')
+            else:
+                row.append(value)
+
+    conv_list.append(row[:])
+    return conv_list
 
 
 def print_map(floor_map):
@@ -127,10 +216,29 @@ def read_input(filename):
             # Read the map portion of the input into a dictionary
             if reading_map:
                 for c, char in enumerate(line):
-                    floor_map[(r, c)] = char
+                    # floor_map[(r, c)] = char
 
+                    # Convert to ##
+                    if char == '#':
+                        floor_map[(r, c * 2)] = '#'
+                        floor_map[(r, c * 2 + 1)] = '#'
+
+                    # Convert to []
+                    if char == 'O':
+                        floor_map[(r, c * 2)] = '['
+                        floor_map[(r, c * 2 + 1)] = ']'
+
+                    # Convert to . .
+                    if char == '.':
+                        floor_map[(r, c * 2)] = '.'
+                        floor_map[(r, c * 2 + 1)] = '.'
+
+                    # Convert to @.
                     if char == '@':
-                        pos = (r, c)
+                        pos = (r, c * 2)
+
+                        floor_map[(r, c * 2)] = '@'
+                        floor_map[(r, c * 2 + 1)] = '.'
 
     with open(filename, 'r') as file:
         instructions = [list(line.strip()) for line in file if "#" not in line and line != '\n']
