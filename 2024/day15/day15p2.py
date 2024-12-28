@@ -5,15 +5,17 @@ def main():
     :return: Exit code
     """
 
-    floor_map, instructions, pos = read_input('input_test.txt')
+    floor_map, instructions, pos = read_input('input_test_up.txt')
 
     print_map(floor_map)
 
     # Parse instructions to move robot
+    i = 0
     for inst in instructions:
         convert_map_to_array(floor_map)
         pos, floor_map = move_robot(pos, inst, floor_map)
-        print(inst)
+        print(inst + ' ' + str(i))
+        i += 1
         print_map(floor_map)
         print()
 
@@ -93,13 +95,12 @@ def shift_boxes(pos, inst, floor_map):
     if floor_map[new_pos] == '#':
         return floor_map
 
-    # Running into a box, see if we can shift
-    if floor_map[new_pos] in ['[', ']']:
-
-        floor_map = shift_boxes(new_pos, inst, floor_map)
-
     # Left to right moves are trivial
     if inst in ['<', '>']:
+
+        if floor_map[new_pos] in ['[', ']']:
+            floor_map = shift_boxes(new_pos, inst, floor_map)
+
         if floor_map[pos] == '[' and floor_map[new_pos] == '.':
             floor_map[new_pos] = '['
             floor_map[pos] = '.'
@@ -111,18 +112,53 @@ def shift_boxes(pos, inst, floor_map):
     # Up and down moves require more effort
     if inst in ['^', 'v']:
 
-        if floor_map[new_pos] == '[':
+        if floor_map[pos] == '[':
 
-            if floor_map[(new_pos[0], new_pos[1] + 1)]:
+
+            floor_map_old = dict(floor_map)
+
+            floor_map = shift_boxes((new_pos[0], new_pos[1] + 1), inst, floor_map)
+            right_move = (floor_map != floor_map_old) #or floor_map[(new_pos[0], new_pos[1] + 1)] == '.'
+
+            floor_map = dict(floor_map_old)
+
+            floor_map = shift_boxes(new_pos, inst, floor_map)
+            left_move = floor_map != floor_map_old #or floor_map[new_pos] == '.'
+
+            floor_map = dict(floor_map_old)
+
+            if right_move and left_move:
                 floor_map = shift_boxes((new_pos[0], new_pos[1] + 1), inst, floor_map)
+                floor_map = shift_boxes(new_pos, inst, floor_map)
 
-        elif floor_map[new_pos] == ']':
+        if floor_map[pos] == ']':
 
-            if floor_map[(new_pos[0], new_pos[1] - 1)]:
+
+            floor_map_old = dict(floor_map)
+
+            floor_map = shift_boxes((new_pos[0], new_pos[1] - 1), inst, floor_map)
+            right_move = (floor_map != floor_map_old) #or floor_map[(new_pos[0], new_pos[1] - 1)] == '.'
+
+            floor_map = dict(floor_map_old)
+
+            floor_map = shift_boxes(new_pos, inst, floor_map)
+            left_move = floor_map != floor_map_old #or floor_map[new_pos] == '.'
+
+            floor_map = dict(floor_map_old)
+
+            if right_move and left_move:
                 floor_map = shift_boxes((new_pos[0], new_pos[1] - 1), inst, floor_map)
+                floor_map = shift_boxes(new_pos, inst, floor_map)
+
+        # if floor_map[pos] == '.':
+        #     if floor_map[(pos[0], pos[1] - 1)] in ['[', ']']:
+        #         floor_map = shift_boxes((pos[0], pos[1] - 1), inst, floor_map)
+        #
+        #     if floor_map[(pos[0], pos[1] + 1)] in ['[', ']']:
+        #         floor_map = shift_boxes((pos[0], pos[1] + 1), inst, floor_map)
 
 
-
+        # We checked out recursively? move the box
         if floor_map[pos] == '[':
             if floor_map[new_pos] == '.' and floor_map[(new_pos[0], new_pos[1] + 1)] == '.':
 
