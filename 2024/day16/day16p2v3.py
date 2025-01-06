@@ -1,30 +1,99 @@
 def main():
     """
-    Entry point for day 16, part 1
+    Entry point for day 16, part 2
+
+
+    632 - too low
 
     :return: Exit status
     """
     maze, start_tile, end_tile = read_input('input_ex.txt')
-    path = a_star_search(maze, start_tile, end_tile)
+    shortest_path = a_star_search(maze, start_tile, end_tile)
 
-    for node in path:
-        maze[node[0]] = '$'
+    path_length = shortest_path[0][1]
+    for i, node in enumerate(shortest_path):
+        shortest_path[i] = (node[0], node[1], path_length - node[1])
+
+    shortest_path.reverse()
+
+    alt_paths = check_intersections(maze, shortest_path, end_tile)
+
+    path_nodes = []
+    for node in shortest_path:
+        path_nodes.append(node[0])
+
+    for alt_path in alt_paths:
+        for node in alt_path:
+            path_nodes.append(node[0])
+
+    path_nodes = list(set(path_nodes))
+
+    for node in path_nodes:
+        maze[node] = '$'
 
     print_map(maze)
 
-    print('Path Score: ' + str(path[0][1]))
+    print('Total shortest path nodes: ' + str(len(path_nodes)))
 
 
-def a_star_search(maze, start_tile, end_tile):
+def check_intersections(maze, path, end_tile):
+    alt_paths = []
+
+    path_nodes = dict()
+    for node in path:
+        path_nodes[node[0]] = node[2]
+
+    # Check each intersection for valid moves that aren't in the path. A* from them.
+    for node in path:
+
+        node_pos = node[0]
+        up_node = (node_pos[0] - 1, node_pos[1])
+        down_node = (node_pos[0] + 1, node_pos[1])
+        left_node = (node_pos[0], node_pos[1] - 1)
+        right_node = (node_pos[0], node_pos[1] + 1)
+
+        successors = [up_node, down_node, left_node, right_node]
+
+        # Find the length of neighbor in path
+        n_length = float('inf')
+        for successor in successors:
+            if successor in path_nodes and path_nodes[successor] < n_length:
+                n_length = path_nodes[successor]
+
+        for successor in successors:
+            # Check move in bounds
+            if successor not in maze:
+                continue
+
+            # Check for valid move
+            if maze[successor] == '#':
+                continue
+
+            # If the path already uses this node, we know it's part of the shortest path
+            if successor in path:
+                continue
+
+            # We now have a valid intersection node that's not in the shortest path
+            alt_path = a_star_search(maze, successor, end_tile, node[0])
+
+            for n in path:
+                if alt_path[0][0] == n[0] and alt_path[0][1] == n_length:
+                    alt_paths.append(alt_path)
+
+    return alt_paths
+
+
+def a_star_search(maze, start_tile, end_tile, branch_parent=None):
     """
     Use A* to find the shortest path through maze
 
     :param maze: Maze layout in a dictionary
     :param start_tile: Starting location
     :param end_tile: Ending location
+    :param branch_parent:
     :return: List of the shortest path nodes
     """
-    open_list = [{'pos': start_tile, 'char': maze[start_tile], 'f': 0, 'g': 0, 'parent': None, }]
+    open_list = [{'pos': start_tile, 'char': maze[start_tile], 'f': 0, 'g': 0, 'parent': None}]
     closed_list = []
 
     # Loop through open list
@@ -62,9 +131,10 @@ def a_star_search(maze, start_tile, end_tile):
             if maze[successor['pos']] == 'E':
                 path = []
 
-                successor['g'] = q['g'] + calculate_distance(successor, q)
+                successor['g'] = q['g'] + calculate_distance(successor, q, branch_parent)
 
                 node = successor
+                score = node['g']
 
                 while node['parent'] is not None:
                     if 'g' not in node:
@@ -72,7 +142,7 @@ def a_star_search(maze, start_tile, end_tile):
                     else:
                         val = node['g']
 
-                    path.append((node['pos'], val))
+                    path.append((node['pos'], val, val - node['parent']['g']))
                     node = node['parent']
 
                 path.append((node['pos'], node['g']))
@@ -80,7 +150,7 @@ def a_star_search(maze, start_tile, end_tile):
                 return path
 
             # Calculate successor g, h, and f values
-            successor['g'] = q['g'] + calculate_distance(successor, q)
+            successor['g'] = q['g'] + calculate_distance(successor, q, branch_parent)
             successor['h'] = calculate_heuristic(successor['pos'], end_tile)
             successor['f'] = successor['g'] + successor['h']
 
@@ -102,7 +172,7 @@ def a_star_search(maze, start_tile, end_tile):
         closed_list.append(q)
 
 
-def calculate_distance(node, parent):
+def calculate_distance(node, parent, branch_parent=None):
     """
     Calculate the existing distance between current node and the parent node
 
@@ -111,7 +181,11 @@ def calculate_distance(node, parent):
     :return: Distance between current location and
     """
 
-    grand = parent['parent']
+    if branch_parent is not None:
+        grand = dict()
+        grand['pos'] = branch_parent
+    else:
+        grand = parent['parent']
     parent_pos = parent['pos']
 
     if grand is None:

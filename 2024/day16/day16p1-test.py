@@ -15,7 +15,7 @@ def main():
     print('Path Score: ' + str(path[0][1]))
 
 
-def a_star_search(maze, start_tile, end_tile):
+def a_star_search(maze, start_tile, end_tile, branch_parent=None):
     """
     Use A* to find the shortest path through maze
 
@@ -24,7 +24,7 @@ def a_star_search(maze, start_tile, end_tile):
     :param end_tile: Ending location
     :return: List of the shortest path nodes
     """
-    open_list = [{'pos': start_tile, 'char': maze[start_tile], 'f': 0, 'g': 0, 'parent': None, }]
+    open_list = [{'pos': (10, 1), 'char': maze[start_tile], 'f': 0, 'g': 0, 'parent': None, }]
     closed_list = []
 
     # Loop through open list
@@ -62,7 +62,7 @@ def a_star_search(maze, start_tile, end_tile):
             if maze[successor['pos']] == 'E':
                 path = []
 
-                successor['g'] = q['g'] + calculate_distance(successor, q)
+                successor['g'] = q['g'] + calculate_distance(successor, q, branch_parent)
 
                 node = successor
 
@@ -80,7 +80,7 @@ def a_star_search(maze, start_tile, end_tile):
                 return path
 
             # Calculate successor g, h, and f values
-            successor['g'] = q['g'] + calculate_distance(successor, q)
+            successor['g'] = q['g'] + calculate_distance(successor, q, branch_parent)
             successor['h'] = calculate_heuristic(successor['pos'], end_tile)
             successor['f'] = successor['g'] + successor['h']
 
@@ -102,7 +102,7 @@ def a_star_search(maze, start_tile, end_tile):
         closed_list.append(q)
 
 
-def calculate_distance(node, parent):
+def calculate_distance(node, parent, branch_parent=None):
     """
     Calculate the existing distance between current node and the parent node
 
@@ -111,7 +111,11 @@ def calculate_distance(node, parent):
     :return: Distance between current location and
     """
 
-    grand = parent['parent']
+    if branch_parent is not None:
+        grand = dict()
+        grand['pos'] = branch_parent
+    else:
+        grand = parent['parent']
     parent_pos = parent['pos']
 
     if grand is None:
