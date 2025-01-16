@@ -7,6 +7,8 @@ def main():
     maze, start_tile, end_tile = read_input('input_ex.txt')
     path = dijkstra_search(maze, start_tile, end_tile)
 
+
+
     for node in path:
         maze[node[0]] = '$'
 
@@ -41,7 +43,7 @@ def dijkstra_search(maze, start_tile, end_tile):
         successors = [up_node, down_node, left_node, right_node]
 
         for successor in successors:
-            if successor['distance'] <
+            if successor['distance'] < 0:
 
                 queue.append(successor)
 

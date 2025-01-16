@@ -4,6 +4,7 @@ def main():
 
 
     632 - too low
+    689 - too high
 
     :return: Exit status
     """
