@@ -5,14 +5,19 @@ def main():
 
     632 - too low
     665 - too low
-    689 - too high
 
+    667 - wrong
+    668 - wrong
     669 - wrong
+    670 - correct
+    676 - wrong
     680 - wrong
+
+    689 - too high
 
     :return: Exit status
     """
-    maze, start_tile, end_tile = read_input('input_ex.txt')
+    maze, start_tile, end_tile = read_input('input.txt')
     starting_direction = 1
 
     shortest_path, path_score = a_star_search(maze, start_tile, end_tile, starting_direction)
@@ -114,8 +119,8 @@ def check_intersections(maze, path, end_tile, shortest_path_length):
     return alt_paths
 
 
-def a_star_search(maze, start_tile, end_tile, starting_direction, partial_path_starting_score=0):
-    open_list = [{'pos': start_tile, 'char': maze[start_tile], 'f': 0, 'g': 0, 'parent': None}]
+def a_star_search(maze, start_tile, end_tile, starting_direction, partial_path_starting_score=0, r=False):
+    open_list = [{'pos': start_tile, 'char': maze[start_tile], 'f': 0, 'g': 0, 'parent': None, 'turn': False}]
     closed_list = []
 
     current_direction = starting_direction
@@ -177,28 +182,41 @@ def a_star_search(maze, start_tile, end_tile, starting_direction, partial_path_s
 
                 return path, path_score
 
-            # Calculate successor g, h, and f values
             pre_turn_correction = 0
-
-            pre_node = (-1, -1)
-
+            s_pos = successor['pos']
+            g_s = (-1, -1)
+            g_1 = (-1, -1)
+            g_2 = (-1, -1)
             if node_direction == 0:
-                pre_node = (successor['pos'][0] - 1, successor['pos'][1])
-            if node_direction == 1:
-                pre_node = (successor['pos'][0], successor['pos'][1] + 1)
-            if node_direction == 2:
-                pre_node = (successor['pos'][0] + 1, successor['pos'][1])
-            if node_direction == 3:
-                pre_node = (successor['pos'][0], successor['pos'][1] - 1)
+                g_s = (s_pos[0] - 1, s_pos[1])
+                g_1 = (s_pos[0], s_pos[1] + 1)
+                g_2 = (s_pos[0], s_pos[1] - 1)
 
-            if maze[pre_node] == '#':
-                pre_turn_correction = 1000
+            elif node_direction == 1:
+                g_s = (s_pos[0], s_pos[1] + 1)
+                g_1 = (s_pos[0] + 1, s_pos[1])
+                g_2 = (s_pos[0] - 1, s_pos[1])
 
+            elif node_direction == 2:
+                g_s = (s_pos[0] + 1, s_pos[1])
+                g_1 = (s_pos[0], s_pos[1] + 1)
+                g_2 = (s_pos[0], s_pos[1] - 1)
 
-            # successor['g'] = q['g'] + 1 + calculate_turns(current_direction, node_direction)
-            successor['g'] = q['g'] + 1 + pre_turn_correction
+            elif node_direction == 3:
+                g_s = (s_pos[0], s_pos[1] - 1)
+                g_1 = (s_pos[0] + 1, s_pos[1])
+                g_2 = (s_pos[0] - 1, s_pos[1])
+
+            if g_s in maze and maze[g_s] == '#':
+                pre_turn_correction += 1000
+
+            if (g_1 in maze and maze[g_1] == '.') or (g_2 in maze and maze[g_2] == '.'):
+                pre_turn_correction += 1000
+
+            # Calculate successor g, h, and f values
+            successor['g'] = q['g'] + 1 + calculate_turns(current_direction, node_direction)
             successor['h'] = calculate_heuristic(successor['pos'], end_tile)
-            successor['f'] = successor['g'] + successor['h']
+            successor['f'] = successor['g'] + successor['h'] + pre_turn_correction
 
             successor['direction'] = node_direction
 
@@ -210,7 +228,7 @@ def a_star_search(maze, start_tile, end_tile, starting_direction, partial_path_s
             better_closed = False
             for node in closed_list:
                 if node['pos'] == successor['pos'] and node['f'] < successor['f']:
-                    better_open = True
+                    better_closed = True
 
             if better_open or better_closed:
                 continue
