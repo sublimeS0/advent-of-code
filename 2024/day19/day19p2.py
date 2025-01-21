@@ -5,14 +5,13 @@ def main():
     """
     Entry point for day 19, part 1
 
-    132 - too low
-    272 - correct
+    1041529704688380 - correct
 
     :return: Exit code
     """
     towels, patterns = read_input('input.txt')
 
-    possible_designs = []
+    pattern_sum = 0
     for pattern in patterns:
 
         # Get only the usable subset of towels
@@ -23,32 +22,31 @@ def main():
 
         available_towels = tuple(available_towels)
 
-        if is_composable(pattern, available_towels):
-            possible_designs.append(pattern)
+        pattern_sum += is_composable(pattern, available_towels)
 
-    print('Number of possible designs: ' + str(len(possible_designs)))
-    print(possible_designs)
+    print('Number of possible designs: ' + str(pattern_sum))
 
 
 @cache
 def is_composable(pattern, towels):
     """
-    Return whether a pattern is composable using a given set of towels
+    Return the number of combinations of towels that can make up a pattern
 
     Cache results for improved runtime
 
     :param pattern: Pattern to be made with towels
     :param towels: Tuple of available towels
-    :return: True if pattern can be mase up of towels, false otherwise
+    :return: Number of combinations of towels that can make up a pattern
     """
     if pattern == '':
-        return True
+        return 1
 
+    count = 0
     for towel in towels:
-        if pattern.startswith(towel) and is_composable(pattern[len(towel):], towels):
-            return True
+        if pattern.startswith(towel):
+            count += is_composable(pattern[len(towel):], towels)
 
-    return False
+    return count
 
 
 def read_input(filename):
