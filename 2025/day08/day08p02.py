@@ -9,87 +9,53 @@ def main():
     """
 
     # Setup
-    boxes = read_input('input.txt')
-    num_connections = 1000
-    n = 3  # Number of the largest circuits to multiply
+    boxes = read_input('input_ex.txt')
 
-    # Collect distances between boxes
-    distances = find_distances(boxes)
+    # Collect node distance information - gives us a list of "unconnected" nodes
+    unconnected = find_distances(boxes)
+    connected = {0: unconnected.pop(0)}
+    circuit = []
 
+    while unconnected:
+        for connected_node in connected.items():
 
-    temp = link_distances(distances)
+            best_connection =
 
+            node_added = False
+            for connection in connected_node[1]:
+                if connection not in connected:
+                    node_added = True
+                    connected[connection] = unconnected.pop(connection)
+                    circuit.append({connected_node[0], connection})
+                    break
 
-def link_distances(distances):
-
-    connections = []
-    while distances:
-        min_dis = min(distances, key=distances.get)
-        connections.append(set(min_dis))
-        distances.pop(min_dis)
-
-
+            if node_added:
+                break
 
     pass
 
 
-
-def combine_connections(connections):
-    """
-    Combines a list of connections (sets) into a list of circuits (sets)
-    :param connections: Input list of connection sets
-    :return: Output list of circuit sets
-    """
-
-    # Maintain two lists: a "master" list and an unchecked list
-    circuits = [connections.pop()]
-    while connections:
-        connection = connections.pop()
-        overlap = False
-
-        for i in range(len(circuits)):
-            circuit = circuits[i]
-
-            # Check for overlap (the connections should be in the same circuit)
-            if connection & circuit:
-                # Add the existing circuit to the connection and add the connection to the unchecked list
-                connection.update(circuit)
-                connections.append(connection)
-
-                # Remove the "old" circuit
-                overlap = True
-                circuits.pop(i)
-                break
-
-        # Add new circuit to the master list
-        if not overlap:
-            circuits.append(connection)
-
-    return circuits
-
-
 def find_distances(boxes):
     """
-    Find all the distances between boxes
+    Find all the distances between boxes. Create a dictionary of dictionaries where they key of the outer dict is a
+    node, and it's value is a dict where they key is a different node and the value is the distance between nodes.
 
     Brute force :( very sad
 
     :param boxes: Set of boxes
-    :return: Dictionary with id-tuple keys and distance values
+    :return: Dictionary of key-nodes whose values are dictionaries of distances between the key and a second node
     """
-
     distances = {}
 
     for box_a in boxes:
+        inner_dict = {}
         for box_b in boxes:
             if box_a['id'] == box_b['id']:
                 continue
 
-            key_tuple = (min(box_a['id'], box_b['id']), max(box_a['id'], box_b['id']))
-            if key_tuple in distances:
-                continue
+            inner_dict[box_b['id']] = calculate_distance(box_a, box_b)
 
-            distances[key_tuple] = calculate_distance(box_a, box_b)
+        distances[box_a['id']] = dict(sorted(inner_dict.items(), key=lambda item: item[1]))
 
     return distances
 
