@@ -13,8 +13,8 @@ def main():
     """
 
     # Setup
-    boxes = read_input('input.txt')
-    num_connections = 1000
+    boxes = read_input('input_ex.txt')
+    num_connections = 10
     n = 3  # Number of the largest circuits to multiply
 
     # Collect distances between boxes

@@ -6,6 +6,12 @@ def main():
     Entry point for Day 8, Part 2
 
     356799792 - too low
+    2573952864 - correct
+    9859012086
+    3788348240 - peter correct
+
+    13443849
+
 
     :return: Exit code
     """
@@ -14,20 +20,41 @@ def main():
 
     # Collect node distance information - gives us a list of "unconnected" nodes
     unconnected = find_distances(boxes)
-
-    connected = [unconnected.pop(0)]
     num_nodes = len(unconnected)
-    circuit = []
+    circuit = {}
+
+    # Algorithm allows for two nodes to point to each other, resolve at the end
+    cycled_nodes = []
+    distances = unconnected.copy()
 
     while len(circuit) < num_nodes - 1:
         unconnected_node = unconnected.popitem()
+        shortest_connection = next(iter(unconnected_node[1]))
+        circuit[(unconnected_node[0], shortest_connection)] = unconnected_node[1][shortest_connection]
 
-        shortest_connection = min(unconnected_node[1], key=unconnected_node[1].get)
-        circuit.append((shortest_connection, unconnected_node[0], unconnected_node[1][shortest_connection]))
+        if (shortest_connection, unconnected_node[0]) in circuit:
+            cycled_nodes.append((unconnected_node[0], shortest_connection))
 
-    last_connection = max(circuit, key=lambda x: x[2])
-    print('Coord product: ' + str(boxes.pop(last_connection[0])['x'] * boxes.pop(last_connection[1])['x']))
+    # Resolve unconnected cycles
+    resolve_cycles(cycled_nodes, distances, circuit)
 
+    last_connection = max(circuit, key=circuit.get)
+    print('Coord product: ' + str(boxes[last_connection[0]]['x'] * boxes[last_connection[1]]['x']))
+
+
+def resolve_cycles(cycles, distances, circuit):
+    for cycle in cycles:
+        distances[cycle[0]].pop(cycle[1])
+        distances[cycle[1]].pop(cycle[0])
+
+        cycle_node_0_next = next(iter(distances[cycle[0]]))
+        cycle_node_1_next = next(iter(distances[cycle[1]]))
+
+        bad_cycle, new_cycle = (cycle, (cycle[0], cycle_node_0_next)) if (cycle_node_0_next < cycle_node_1_next) else (tuple(reversed(cycle)), (cycle[1], cycle_node_1_next))
+        circuit.pop(bad_cycle)
+
+        circuit[new_cycle] = distances[bad_cycle[0]][new_cycle[1]]
+        pass
 
 
 def find_distances(boxes):

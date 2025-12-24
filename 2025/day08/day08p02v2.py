@@ -1,4 +1,5 @@
 import math
+import sys
 
 
 def main():
@@ -10,24 +11,50 @@ def main():
     :return: Exit code
     """
     # Setup
-    boxes = read_input('peter_input.txt')
+    boxes = read_input('input_ex.txt')
 
     # Collect node distance information - gives us a list of "unconnected" nodes
-    unconnected = find_distances(boxes)
+    distances, unconnected, circuit = find_distances_tuples(boxes)
 
-    connected = [unconnected.pop(0)]
     num_nodes = len(unconnected)
-    circuit = []
+    connected = [unconnected.pop(0)]
 
-    while len(circuit) < num_nodes - 1:
-        unconnected_node = unconnected.popitem()
+    longest_connection = ()
+    while len(connected) < num_nodes - 1:
+        unconnected_node = unconnected.pop()
 
-        shortest_connection = min(unconnected_node[1], key=unconnected_node[1].get)
-        circuit.append((shortest_connection, unconnected_node[0], unconnected_node[1][shortest_connection]))
+        best_connection = ()
 
-    last_connection = max(circuit, key=lambda x: x[2])
-    print('Coord product: ' + str(boxes.pop(last_connection[0])['x'] * boxes.pop(last_connection[1])['x']))
+        for connected_node in connected:
+            if not best_connection or distances[(unconnected_node, connected_node)] < best_connection[2]:
+                best_connection = (connected_node, unconnected_node, distances[(unconnected_node, connected_node)])
 
+        connected.append(unconnected_node)
+        circuit.append(best_connection)
+
+        if not longest_connection or best_connection[2] > longest_connection[2]:
+            longest_connection = best_connection
+
+    print('Coord product: ' + str(boxes.pop(longest_connection[0])['x'] * boxes.pop(longest_connection[1])['x']))
+
+
+def find_distances_tuples(boxes):
+    distances = {}
+    unconnected = []
+    circuit = {}
+
+    for box_a in boxes:
+        for box_b in boxes:
+            if box_a['id'] == box_b['id']:
+                continue
+
+            distances[(box_a['id'], box_b['id'])] = calculate_distance(box_a, box_b)
+
+        unconnected.append(box_a['id'])
+        circuit[box_a['id']] = sys.maxsize
+
+    circuit[0] = 0
+    return distances, unconnected, circuit
 
 
 def find_distances(boxes):

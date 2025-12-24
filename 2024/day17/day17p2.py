@@ -3,19 +3,25 @@ def main():
     Entry point for day 17, part 1
 
                 ---5
-
+    5831000000
 
 
 
     :return: Exit code
     """
-    register_a, register_b, register_c, command_list = read_input('input_ex_pt2.txt')
+    register_a, register_b, register_c, command_list = read_input('input.txt')
     output = process_instructions(register_a, register_b, register_c, command_list)
 
+    i = 0
     register_a = 0
     while output != command_list:
         register_a += 1
+        i += 1
         output = process_instructions(register_a, register_b, register_c, command_list)
+
+        if i == 1000000:
+            print(register_a)
+            i = 0
 
     print('New register a value: ' + str(register_a))
 
