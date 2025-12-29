@@ -2,24 +2,41 @@ def main() -> int:
     """
     Entry point for Day 9, Part 1
 
+    Answers:
+     - 2636870220 (too low)
+     - 4756718172 (correct)
+
     :return: Exit code
     """
-    red_tiles: list = read_input('input_ex.txt')
+    red_tiles: list = read_input('input.txt')
 
-    # Get max and min values for both axes
-    x_coords, y_coords = zip(*red_tiles)
-    min_x, max_x = min(x_coords), max(x_coords)
-    min_y, max_y = min(y_coords), max(y_coords)
-    center = ((max_x + min_x) / 2, ((max_y + min_y) / 2))
+    # Just brute force the area??? I'm surprised this actually runs instantly
+    max_area = 0
+    for tile in red_tiles:
+        for tile_check in red_tiles:
+            if calculate_area(tile, tile_check) > max_area:
+                max_area = calculate_area(tile, tile_check)
 
-    check_tiles = list(filter(lambda tile: (tile[0] in [min_x, max_x]) or (tile[1] in [min_y, max_y]), red_tiles))
+    print('Max area: ' + str(max_area))
 
     return 0
+
+
+def calculate_area(coord_a: tuple, coord_b: tuple):
+    """
+    Calculates area of rectangle give two points
+
+    :param coord_a: Point A
+    :param coord_b: Point B
+    :return: Area of rectangle formed by the two points
+    """
+    return abs(coord_a[0] + 1 - coord_b[0]) * abs(coord_a[1] + 1 - coord_b[1])
 
 
 def read_input(filename: str) -> list[tuple]:
     """
     Read input file into relevant data structures
+
     :param filename: Name of input file
     :return: Return relevant data structures
     """

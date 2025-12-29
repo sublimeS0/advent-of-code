@@ -2,6 +2,10 @@ def main() -> int:
     """
     Entry point for Day x, Part y
 
+    Answers:
+     -
+     -
+
     :return: Exit code
     """
 
